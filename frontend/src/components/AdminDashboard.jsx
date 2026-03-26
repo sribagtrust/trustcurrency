@@ -44,7 +44,7 @@ function AdminDashboard() {
         setRequests(requestsRes.data);
         setStats(statsRes.data);
         setAllUsers(usersRes.data);
-      } catch (err) {
+      } catch {
         setMessage("Failed to load Admin Data. Ensure you are logged in as Admin.");
       }
     };
@@ -78,8 +78,6 @@ function AdminDashboard() {
     setAddUserMessage('');
     setAddUserError(false);
 
-    const token = localStorage.getItem('token');
-    try {
     try {
       const response = await apiClient.post('/api/admin/add-user', {
         name: addUserName,
@@ -95,7 +93,9 @@ function AdminDashboard() {
       setAddUserName(''); setAddUserPhone(''); setAddUserEmail(''); setAddUserPassword('');
       
       // Refresh the directory so the new user shows up instantly!
-      const usersRes = await apiClient.get('/api/admin/users'
+      const usersRes = await apiClient.get('/api/admin/users');
+      setAllUsers(usersRes.data);
+      setStats(prev => ({ ...prev, totalUsers: prev.totalUsers + 1 }));
 
     } catch (err) {
       setAddUserError(true);
@@ -193,9 +193,9 @@ function AdminDashboard() {
                     </div>
                     <div 
                       style={{ backgroundColor: '#f8f9fa', height: '150px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '1px solid #ced4da', position: 'relative' }}
-                      onClick={() => setSelectedImage(`${API_BASE_URL}${req.screenshotPath}`)}
+                      onClick={() => setSelectedImage(`http://localhost:5005${req.screenshotPath}`)}
                     >
-                      <img src={`${API_BASE_URL}${req.screenshotPath}`} alt="Proof" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }} />
+                      <img src={`http://localhost:5005${req.screenshotPath}`} alt="Proof" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }} />
                       <div style={{ position: 'absolute', backgroundColor: 'rgba(0,0,0,0.6)', color: 'white', padding: '5px 15px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '5px' }}><Eye size={16} /> Enlarge</div>
                     </div>
                     <div style={{ display: 'flex', gap: '10px' }}>
