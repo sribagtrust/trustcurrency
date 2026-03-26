@@ -1,0 +1,49 @@
+// server.js
+require('dotenv').config();
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+
+// Import your models
+const User = require('./models/User');
+const Plan = require('./models/Plan');
+const Transaction = require('./models/Transaction');
+const Store = require('./models/Store');
+
+// Import your routes
+const authRoutes = require('./routes/auth'); // <-- ADD THIS LINE
+const walletRoutes = require('./routes/wallet');
+const transactionRoutes = require('./routes/transaction');
+const adminRoutes = require('./routes/admin');
+const app = express();
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use('/uploads', express.static('uploads')); // 👈 ADD THIS LINE! This makes the images public to the Admin
+
+// Connect to MongoDB
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('Successfully connected to the Trust Database'))
+  .catch((err) => console.error('Database connection error:', err));
+
+// Route Middlewares
+app.use('/api/auth', authRoutes); // <-- ADD THIS LINE
+app.use('/api/wallet', walletRoutes);
+app.use('/api/transactions', transactionRoutes);
+app.use('/api/admin', adminRoutes);
+
+// A simple test route
+app.get('/', (req, res) => {
+  res.send('TrustCoin API is running!');
+});
+
+// Start the server
+const PORT = 5005;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
