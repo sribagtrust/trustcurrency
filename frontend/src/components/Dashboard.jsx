@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient from '../utils/apiClient';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { User, Phone, Mail, Hash, ArrowUpRight, ArrowDownLeft, Clock } from 'lucide-react';
@@ -37,9 +37,7 @@ function Dashboard() {
         return;
       }
       try {
-        const response = await axios.get('http://localhost:5005/api/wallet/dashboard-data', {
-          headers: { 'x-auth-token': token }
-        });
+        const response = await apiClient.get('/api/wallet/dashboard-data');
         setDashboardData(response.data);
       } catch (err) {
         setError('Session expired or invalid. Please log in again.');

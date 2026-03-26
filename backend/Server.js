@@ -17,14 +17,17 @@ const transactionRoutes = require('./routes/transaction');
 const adminRoutes = require('./routes/admin');
 const app = express();
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// CORS Configuration for production
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true,
+  optionsSuccessStatus: 200,
+};
 
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
-app.use('/uploads', express.static('uploads')); // 👈 ADD THIS LINE! This makes the images public to the Admin
+app.use('/uploads', express.static('uploads')); // This makes the images public to the Admin
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
@@ -43,7 +46,7 @@ app.get('/', (req, res) => {
 });
 
 // Start the server
-const PORT = 5005;
+const PORT = process.env.PORT || 5005;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

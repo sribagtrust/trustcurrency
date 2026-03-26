@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient from '../utils/apiClient';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, XCircle, Users, Clock, Eye, AlertCircle, LayoutDashboard, List, UserPlus } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5005';
 
 function AdminDashboard() {
   const [requests, setRequests] = useState([]);
@@ -34,9 +36,9 @@ function AdminDashboard() {
 
       try {
         const [requestsRes, statsRes, usersRes] = await Promise.all([
-          axios.get('http://localhost:5005/api/admin/pending-requests', { headers: { 'x-auth-token': token } }),
-          axios.get('http://localhost:5005/api/admin/dashboard-stats', { headers: { 'x-auth-token': token } }),
-          axios.get('http://localhost:5005/api/admin/users', { headers: { 'x-auth-token': token } })
+          apiClient.get('/api/admin/pending-requests'),
+          apiClient.get('/api/admin/dashboard-stats'),
+          apiClient.get('/api/admin/users')
         ]);
         
         setRequests(requestsRes.data);
@@ -51,18 +53,16 @@ function AdminDashboard() {
   }, [navigate]);
 
   const handleResolve = async (id, action) => {
-    const token = localStorage.getItem('token');
     try {
-      const response = await axios.post(`http://localhost:5005/api/admin/resolve-request/${id}`, 
-        { action: action }, 
-        { headers: { 'x-auth-token': token } }
+      const response = await apiClient.post(`/api/admin/resolve-request/${id}`, 
+        { action: action }
       );
       
       setMessage(response.data.message);
       setRequests(requests.filter(req => req._id !== id));
       if (action === 'Approve') {
         setStats(prev => ({ ...prev, pendingCount: prev.pendingCount - 1 }));
-        const usersRes = await axios.get('http://localhost:5005/api/admin/users', { headers: { 'x-auth-token': token } });
+        const usersRes = await apiClient.get('/api/admin/users');
         setAllUsers(usersRes.data);
       } else {
         setStats(prev => ({ ...prev, pendingCount: prev.pendingCount - 1 }));
@@ -80,12 +80,13 @@ function AdminDashboard() {
 
     const token = localStorage.getItem('token');
     try {
-      const response = await axios.post('http://localhost:5005/api/admin/add-user', {
+    try {
+      const response = await apiClient.post('/api/admin/add-user', {
         name: addUserName,
         phone: addUserPhone,
         email: addUserEmail,
         password: addUserPassword
-      }, { headers: { 'x-auth-token': token } });
+      });
 
       setAddUserError(false);
       setAddUserMessage(response.data.message);
@@ -94,9 +95,7 @@ function AdminDashboard() {
       setAddUserName(''); setAddUserPhone(''); setAddUserEmail(''); setAddUserPassword('');
       
       // Refresh the directory so the new user shows up instantly!
-      const usersRes = await axios.get('http://localhost:5005/api/admin/users', { headers: { 'x-auth-token': token } });
-      setAllUsers(usersRes.data);
-      setStats(prev => ({ ...prev, totalUsers: prev.totalUsers + 1 }));
+      const usersRes = await apiClient.get('/api/admin/users'
 
     } catch (err) {
       setAddUserError(true);
@@ -194,9 +193,9 @@ function AdminDashboard() {
                     </div>
                     <div 
                       style={{ backgroundColor: '#f8f9fa', height: '150px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '1px solid #ced4da', position: 'relative' }}
-                      onClick={() => setSelectedImage(`http://localhost:5005${req.screenshotPath}`)}
+                      onClick={() => setSelectedImage(`${API_BASE_URL}${req.screenshotPath}`)}
                     >
-                      <img src={`http://localhost:5005${req.screenshotPath}`} alt="Proof" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }} />
+                      <img src={`${API_BASE_URL}${req.screenshotPath}`} alt="Proof" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }} />
                       <div style={{ position: 'absolute', backgroundColor: 'rgba(0,0,0,0.6)', color: 'white', padding: '5px 15px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '5px' }}><Eye size={16} /> Enlarge</div>
                     </div>
                     <div style={{ display: 'flex', gap: '10px' }}>

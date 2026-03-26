@@ -1,0 +1,31 @@
+services:
+  # Backend API Service
+  - type: web
+    name: trust-coin-api
+    env: node
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "10000"
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        value: https://trust-coin-frontend.onrender.com
+
+  # Frontend Web Service
+  - type: web
+    name: trust-coin-frontend
+    env: node
+    plan: free
+    buildCommand: cd frontend && npm install && npm run build
+    startCommand: cd frontend && npm run preview
+    publishDirectory: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://trust-coin-api.onrender.com

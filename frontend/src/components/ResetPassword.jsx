@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import apiClient from '../utils/apiClient';
 import { useNavigate, Link } from 'react-router-dom';
 import { ShieldAlert, CheckCircle, AlertCircle } from 'lucide-react';
 
@@ -17,7 +17,7 @@ function ResetPassword() {
     setIsError(false);
 
     try {
-      const response = await axios.post('http://localhost:5005/api/auth/reset-password', {
+      const response = await apiClient.post('/api/auth/reset-password', {
         phone,
         uniqueId,
         newPassword

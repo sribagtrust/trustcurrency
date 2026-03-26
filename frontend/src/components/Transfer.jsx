@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import apiClient from '../utils/apiClient';
 import { useNavigate } from 'react-router-dom';
 import { Send, CheckCircle, AlertCircle } from 'lucide-react';
 
@@ -39,13 +39,12 @@ function Transfer() {
 
     try {
       // NOTE: We still send 'coins' to the backend so the math engine doesn't break!
-      const response = await axios.post('http://localhost:5005/api/transactions/transfer', 
+      const response = await apiClient.post('/api/transactions/transfer', 
         { 
           recipientPhone: recipientPhone, 
           rupees: selectedPlan.rupees,
           coins: selectedPlan.currency 
-        }, 
-        { headers: { 'x-auth-token': token } }
+        }
       );
 
       setIsError(false);

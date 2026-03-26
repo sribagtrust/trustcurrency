@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient from '../utils/apiClient';
 import { useNavigate } from 'react-router-dom';
 import { User, CheckCircle, AlertCircle, Lock } from 'lucide-react';
 
@@ -22,9 +22,7 @@ function EditProfile() {
         return;
       }
       try {
-        const response = await axios.get('http://localhost:5005/api/wallet/dashboard-data', {
-          headers: { 'x-auth-token': token }
-        });
+        const response = await apiClient.get('/api/wallet/dashboard-data');
         setName(response.data.name || '');
         setEmail(response.data.email || '');
         setPhone(response.data.phone || '');
@@ -43,9 +41,8 @@ function EditProfile() {
 
     const token = localStorage.getItem('token');
     try {
-      const response = await axios.put('http://localhost:5005/api/auth/profile', 
-        { name, email },
-        { headers: { 'x-auth-token': token } }
+      const response = await apiClient.put('/api/auth/profile', 
+        { name, email }
       );
       
       setIsError(false);

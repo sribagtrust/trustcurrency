@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import apiClient from '../utils/apiClient';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Upload, CheckCircle, AlertCircle, QrCode, Banknote, Smartphone } from 'lucide-react';
 
@@ -80,9 +80,8 @@ function AddFunds() {
     }
 
     try {
-      const response = await axios.post('http://localhost:5005/api/wallet/recharge-request', formData, {
+      const response = await apiClient.post('/api/wallet/recharge-request', formData, {
         headers: { 
-          'x-auth-token': token,
           'Content-Type': 'multipart/form-data'
         }
       });

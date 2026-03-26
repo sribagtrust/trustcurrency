@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import apiClient from '../utils/apiClient';
 import { useNavigate, Link } from 'react-router-dom';
 import { CheckCircle, AlertCircle, UserPlus } from 'lucide-react';
 
@@ -18,7 +18,7 @@ function Register() {
     setIsError(false);
 
     try {
-      await axios.post('http://localhost:5005/api/auth/register', {
+      await apiClient.post('/api/auth/register', {
         name,
         phone,
         email, // 👈 Sending email to backend
