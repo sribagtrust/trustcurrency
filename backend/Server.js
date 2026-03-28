@@ -19,7 +19,7 @@ const app = express();
 
 // CORS Configuration for production and development
 const allowedOrigins = [
-  process.env.FRONTEND_URL || 'https://trustcurrency-1.onrender.com',
+  process.env.FRONTEND_URL || 'https://trustcurrency.com'||'https://www.trustcurrency.com'||'https://d1o6n27q1nzv65.cloudfront.net', // Production frontend URL
   'http://localhost:5173', // Local development
   'http://localhost:3000', // Alternative local dev port
 ];
