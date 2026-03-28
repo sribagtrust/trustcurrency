@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API = 'https://api.trustcurrency.com';
+const API = 'https://api.thetrustcurrency.com';
 
 // Create axios instance with base URL
 const apiClient = axios.create({
