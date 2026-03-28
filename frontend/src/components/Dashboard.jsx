@@ -2,9 +2,8 @@ import { useState, useEffect } from 'react';
 import apiClient from '../utils/apiClient';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { User, Phone, Mail, Hash, ArrowUpRight, ArrowDownLeft, Clock } from 'lucide-react';
+import { User, Phone, Mail, Hash, ArrowUpRight, ArrowDownLeft, Clock, AlertTriangle } from 'lucide-react';
 
-// Move CustomTooltip outside the Dashboard component to avoid recreation during render
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
@@ -39,7 +38,7 @@ function Dashboard() {
       try {
         const response = await apiClient.get('/api/wallet/dashboard-data');
         setDashboardData(response.data);
-      } catch (err) {
+      } catch {
         setError('Session expired or invalid. Please log in again.');
         localStorage.removeItem('token');
         navigate('/login');
@@ -57,31 +56,25 @@ function Dashboard() {
     return plan ? plan.rupees : currencyAmount; 
   };
 
-  // 👇 THE TIME MACHINE ALGORITHM 👇
   const getFilteredGraphData = () => {
     if (!dashboardData || !dashboardData.transactions) return [];
     
-    // 1. Start with their current balance
     let runningBalance = dashboardData.walletBalance;
-    
-    // 2. Walk backwards through the transactions
     const allPoints = [...dashboardData.transactions].map(tx => {
       const isSent = tx.sender?.phone === dashboardData.phone;
       const changeAmount = isSent ? -getRupeeCost(tx.amount) : tx.amount;
       
       const point = {
         time: new Date(tx.date).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
-        Balance: runningBalance, // This prevents the graph from ever going negative!
-        Change: changeAmount,    // We save this for the tooltip popup
+        Balance: runningBalance, 
+        Change: changeAmount,    
         rawDate: new Date(tx.date)
       };
       
-      // 3. Step backward in time for the next older transaction
       runningBalance = runningBalance - changeAmount;
       return point;
     });
 
-    // 4. Apply the time filters
     let filteredPoints = allPoints;
     if (timeFilter !== 'all') {
       const now = new Date();
@@ -94,9 +87,25 @@ function Dashboard() {
       
       filteredPoints = allPoints.filter(p => p.rawDate >= cutoff);
     }
-    
-    // 5. Reverse the array so the graph draws from Oldest (Left) to Newest (Right)
     return filteredPoints.reverse();
+  };
+
+  // 👇 NEW: Handle Exit Account Logic 👇
+  const handleExitAccount = async () => {
+    const confirmExit = window.confirm(
+      "WARNING: Are you absolutely sure you want to close your account? \n\nThis will instantly permanently delete your profile, erase your remaining balance, and transfer all of your sub-users directly to the Admin. This action cannot be undone."
+    );
+
+    if (!confirmExit) return;
+
+    try {
+      await apiClient.delete('/api/wallet/exit-account');
+      localStorage.removeItem('token');
+      localStorage.removeItem('role');
+      navigate('/login');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to close account.');
+    }
   };
 
   const graphData = getFilteredGraphData();
@@ -118,13 +127,61 @@ function Dashboard() {
         <>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h2 style={{ fontSize: '28px', color: '#333', margin: 0 }}>Dashboard Overview</h2>
-            <button 
-              onClick={() => navigate('/add-funds')}
-              style={{ padding: '12px 24px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', fontWeight: 'bold', boxShadow: '0 4px 6px rgba(40,167,69,0.2)' }}
-            >
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button 
+                onClick={() => navigate('/add-funds')}
+                style={{ padding: '12px 24px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', fontWeight: 'bold', boxShadow: '0 4px 6px rgba(40,167,69,0.2)' }}
+              >
               + Request Recharge
-            </button>
-          </div>
+            </button>              <button
+                onClick={handleExitAccount}
+                style={{ padding: '12px 24px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', fontWeight: 'bold', boxShadow: '0 4px 6px rgba(220,53,69,0.2)' }}
+              >
+                Close Account
+              </button>
+            </div>          </div>
+
+          {/* SUB-USER REVIEW QUEUE */}
+          {dashboardData.pendingSubRequests && dashboardData.pendingSubRequests.length > 0 && (
+            <div style={{ padding: '25px', backgroundColor: 'white', border: '2px solid #007bff', borderRadius: '15px', marginBottom: '30px', boxShadow: '0 4px 15px rgba(0,123,255,0.1)', animation: 'fadeIn 0.5s ease' }}>
+              <h3 style={{ margin: '0 0 20px 0', color: '#007bff', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                🔔 Action Required: Requests from your Sub-Users
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                {dashboardData.pendingSubRequests.map(req => (
+                  <div key={req._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', padding: '15px', border: '1px solid #dee2e6', borderRadius: '10px', backgroundColor: '#f8f9fa' }}>
+                    <div>
+                      <p style={{ margin: 0, fontWeight: 'bold', fontSize: '18px', color: '#333' }}>{req.user?.name} <span style={{ color: '#007bff', fontSize: '14px' }}>({req.user?.uniqueId})</span></p>
+                      <p style={{ margin: '5px 0 0 0', fontSize: '14px', color: '#6c757d' }}>Requested: <strong style={{ color: '#28a745' }}>{req.amountRequested} Currency</strong></p>
+                      <p style={{ margin: '5px 0 0 0', fontSize: '13px', color: '#dc3545', fontWeight: 'bold' }}>UTR: {req.utrNumber}</p>
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                      <button 
+                        onClick={async () => {
+                          try {
+                            await apiClient.post(`/api/wallet/resolve-sub-request/${req._id}`, { action: 'Approve' });
+                            window.location.reload();
+                          } catch (err) { alert(err.response?.data?.message || 'Error approving request'); }
+                        }} 
+                        style={{ padding: '10px 20px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                        Approve
+                      </button>
+                      <button 
+                        onClick={async () => {
+                          try {
+                            await apiClient.post(`/api/wallet/resolve-sub-request/${req._id}`, { action: 'Reject' });
+                            window.location.reload();
+                          } catch { alert('Error rejecting request'); }
+                        }} 
+                        style={{ padding: '10px 20px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '30px' }}>
             <div style={{ padding: '25px', backgroundColor: 'white', border: '1px solid #e9ecef', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
@@ -144,6 +201,17 @@ function Dashboard() {
                 {dashboardData.email && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#495057' }}><Mail size={18} color="#6c757d" /> <strong>Email:</strong> {dashboardData.email}</div>
                 )}
+                
+                <button 
+                  onClick={() => {
+                    const link = `${window.location.origin}/register?ref=${dashboardData.uniqueId}`;
+                    navigator.clipboard.writeText(link);
+                    alert('Referral Link Copied! Send this to your friends.');
+                  }}
+                  style={{ marginTop: '5px', padding: '12px', backgroundColor: '#e9f2ff', color: '#007bff', border: '1px solid #b8daff', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
+                >
+                   🔗 Copy My Referral Link
+                </button>
               </div>
             </div>
 
@@ -178,10 +246,7 @@ function Dashboard() {
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e0e0e0" />
                     <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fill: '#6c757d', fontSize: 12 }} />
                     <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6c757d' }} />
-                    {/* 👇 Using our Custom Tooltip 👇 */}
                     <Tooltip content={<CustomTooltip />} />
-                    
-                    {/* The Line is now a solid beautiful blue representing the running balance! */}
                     <Line type="monotone" dataKey="Balance" stroke="#007bff" strokeWidth={3} dot={{ r: 4, fill: '#007bff', strokeWidth: 2, stroke: 'white' }} activeDot={{ r: 8 }} />
                   </LineChart>
                 </ResponsiveContainer>

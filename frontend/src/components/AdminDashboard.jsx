@@ -13,10 +13,8 @@ function AdminDashboard() {
   const [message, setMessage] = useState('');
   const [selectedImage, setSelectedImage] = useState(null);
   
-  // 👈 New tab state includes 'adduser'
   const [activeTab, setActiveTab] = useState('overview'); 
   
-  // 👈 State for the Admin's "Create User" form
   const [addUserName, setAddUserName] = useState('');
   const [addUserPhone, setAddUserPhone] = useState('');
   const [addUserEmail, setAddUserEmail] = useState('');
@@ -72,7 +70,6 @@ function AdminDashboard() {
     }
   };
 
-  // 👇 The new function to handle Admin creating a user 👇
   const handleAddUser = async (e) => {
     e.preventDefault();
     setAddUserMessage('');
@@ -89,10 +86,8 @@ function AdminDashboard() {
       setAddUserError(false);
       setAddUserMessage(response.data.message);
       
-      // Clear the form
       setAddUserName(''); setAddUserPhone(''); setAddUserEmail(''); setAddUserPassword('');
       
-      // Refresh the directory so the new user shows up instantly!
       const usersRes = await apiClient.get('/api/admin/users');
       setAllUsers(usersRes.data);
       setStats(prev => ({ ...prev, totalUsers: prev.totalUsers + 1 }));
@@ -128,7 +123,6 @@ function AdminDashboard() {
 
       {message && <div style={{ padding: '15px', backgroundColor: '#d4edda', color: '#155724', borderRadius: '8px', marginBottom: '20px', fontWeight: 'bold' }}>{message}</div>}
 
-      {/* TOP STATS ROW */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '30px' }}>
         <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', gap: '20px' }}>
           <div style={{ backgroundColor: '#e9f2ff', padding: '15px', borderRadius: '50%' }}><Users size={32} color="#007bff" /></div>
@@ -146,7 +140,6 @@ function AdminDashboard() {
         </div>
       </div>
 
-      {/* TAB NAVIGATION */}
       <div style={{ display: 'flex', gap: '15px', marginBottom: '30px', flexWrap: 'wrap' }}>
         <button style={tabStyle('overview')} onClick={() => setActiveTab('overview')}>
           <LayoutDashboard size={20} /> Operations Overview
@@ -154,14 +147,11 @@ function AdminDashboard() {
         <button style={tabStyle('directory')} onClick={() => setActiveTab('directory')}>
           <List size={20} /> Master User Directory
         </button>
-        {/* 👇 New Tab Button 👇 */}
         <button style={tabStyle('adduser')} onClick={() => setActiveTab('adduser')}>
           <UserPlus size={20} /> Create New User
         </button>
       </div>
 
-      {/* --- CONDITIONAL RENDERING BASED ON TAB --- */}
-      
       {activeTab === 'overview' && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', alignItems: 'start' }}>
           <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
@@ -184,7 +174,6 @@ function AdminDashboard() {
                       </div>
                       <div style={{ textAlign: 'right' }}>
                         <p style={{ margin: 0, color: '#6c757d', fontSize: '12px', textTransform: 'uppercase' }}>Requested</p>
-                        {/* 👇 Updated to "Currency" and added UTR Display 👇 */}
                         <p style={{ margin: 0, color: '#28a745', fontSize: '24px', fontWeight: 'bold' }}>{req.amountRequested} Currency</p>
                         <p style={{ margin: '5px 0 0 0', color: '#dc3545', fontSize: '12px', fontWeight: 'bold', backgroundColor: '#fff1f0', padding: '2px 6px', borderRadius: '4px', display: 'inline-block' }}>
                           UTR: {req.utrNumber || 'N/A'}
@@ -193,9 +182,9 @@ function AdminDashboard() {
                     </div>
                     <div 
                       style={{ backgroundColor: '#f8f9fa', height: '150px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '1px solid #ced4da', position: 'relative' }}
-                      onClick={() => setSelectedImage(`http://localhost:5005${req.screenshotPath}`)}
+                      onClick={() => setSelectedImage(`${API_BASE_URL}${req.screenshotPath}`)}
                     >
-                      <img src={`http://localhost:5005${req.screenshotPath}`} alt="Proof" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }} />
+                      <img src={`${API_BASE_URL}${req.screenshotPath}`} alt="Proof" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }} />
                       <div style={{ position: 'absolute', backgroundColor: 'rgba(0,0,0,0.6)', color: 'white', padding: '5px 15px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '5px' }}><Eye size={16} /> Enlarge</div>
                     </div>
                     <div style={{ display: 'flex', gap: '10px' }}>
@@ -209,7 +198,6 @@ function AdminDashboard() {
           </div>
 
           <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
-            {/* 👇 Updated to Currency 👇 */}
             <h2 style={{ margin: '0 0 20px 0', borderBottom: '2px solid #f8f9fa', paddingBottom: '10px' }}>Currency Distribution History</h2>
             <div style={{ height: '400px', width: '100%' }}>
               <ResponsiveContainer width="100%" height="100%">
@@ -235,6 +223,7 @@ function AdminDashboard() {
                 <tr style={{ backgroundColor: '#f8f9fa', color: '#495057', fontSize: '14px', textTransform: 'uppercase' }}>
                   <th style={{ padding: '15px', borderBottom: '2px solid #dee2e6' }}>User Details</th>
                   <th style={{ padding: '15px', borderBottom: '2px solid #dee2e6' }}>Contact Info</th>
+                  <th style={{ padding: '15px', borderBottom: '2px solid #dee2e6' }}>Agent (Referred By)</th>
                   <th style={{ padding: '15px', borderBottom: '2px solid #dee2e6' }}>Role</th>
                   <th style={{ padding: '15px', borderBottom: '2px solid #dee2e6' }}>Current Balance</th>
                 </tr>
@@ -251,6 +240,15 @@ function AdminDashboard() {
                       {user.email && <p style={{ margin: '5px 0 0 0', fontSize: '13px' }}>✉️ {user.email}</p>}
                     </td>
                     <td style={{ padding: '15px' }}>
+                      {user.referredBy ? (
+                        <span style={{ color: '#007bff', fontWeight: 'bold', backgroundColor: '#e9f2ff', padding: '5px 10px', borderRadius: '5px' }}>
+                          🔗 {user.referredBy}
+                        </span>
+                      ) : (
+                        <span style={{ color: '#6c757d', fontStyle: 'italic' }}>None (Direct)</span>
+                      )}
+                    </td>
+                    <td style={{ padding: '15px' }}>
                       <span style={{ 
                         backgroundColor: user.role === 'admin' ? '#ffeeba' : '#e9ecef', 
                         color: user.role === 'admin' ? '#856404' : '#495057', 
@@ -259,7 +257,6 @@ function AdminDashboard() {
                         {user.role || 'User'}
                       </span>
                     </td>
-                    {/* 👇 Updated to Currency 👇 */}
                     <td style={{ padding: '15px', fontWeight: 'bold', fontSize: '18px', color: '#28a745' }}>
                       {user.walletBalance} Currency
                     </td>
@@ -271,7 +268,6 @@ function AdminDashboard() {
         </div>
       )}
 
-      {/* 👇 THE NEW ADD USER TAB FOR ADMIN 👇 */}
       {activeTab === 'adduser' && (
         <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ margin: '0 0 20px 0', borderBottom: '2px solid #f8f9fa', paddingBottom: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>

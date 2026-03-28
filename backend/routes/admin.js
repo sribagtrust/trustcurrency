@@ -9,7 +9,8 @@ const Transaction = require('../models/Transaction'); // 👈 FIX 2: Added Trans
 // @route   GET /api/admin/pending-requests
 router.get('/pending-requests', auth, async (req, res) => {
   try {
-    const requests = await RechargeRequest.find({ status: 'Pending' })
+    // 👇 ADDED agentId: 'Admin' so you don't see sub-user requests
+    const requests = await RechargeRequest.find({ status: 'Pending', agentId: 'Admin' })
       .populate('user', 'name phone uniqueId email') 
       .sort({ createdAt: -1 });
     res.json(requests);
@@ -119,6 +120,39 @@ router.post('/add-user', auth, async (req, res) => {
   } catch (err) {
     console.error("Add User Error:", err);
     res.status(500).json({ message: 'Server error creating user' });
+  }
+});
+// 👇 THE UPDATED ADMIN DELETE ROUTE (Chain-Link Logic) 👇
+router.delete('/delete-user/:id', auth, async (req, res) => {
+  try {
+    const userToDelete = await User.findById(req.params.id);
+    if (!userToDelete) return res.status(404).json({ message: 'User not found' });
+
+    if (userToDelete._id.toString() === req.user.id) {
+      return res.status(400).json({ message: 'Action Blocked: You cannot delete your own Admin account.' });
+    }
+
+    // 👇 1. Find who this deleted user's Boss is
+    const grandBossId = userToDelete.referredBy;
+
+    // 👇 2. Move all their Sub-Users up the chain to the Grand-Boss!
+    await User.updateMany(
+      { referredBy: userToDelete.uniqueId },
+      { $set: { referredBy: grandBossId } }
+    );
+
+    // 👇 3. Reroute any pending requests
+    await RechargeRequest.updateMany(
+      { agentId: userToDelete.uniqueId, status: 'Pending' },
+      { $set: { agentId: grandBossId || 'Admin' } }
+    );
+
+    await User.findByIdAndDelete(req.params.id);
+
+    res.json({ message: `Successfully deleted ${userToDelete.name}. Sub-users moved up the chain.` });
+  } catch (err) {
+    console.error("Admin Delete Error:", err);
+    res.status(500).json({ message: 'Server error deleting user.' });
   }
 });
 

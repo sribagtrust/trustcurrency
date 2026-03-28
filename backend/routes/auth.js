@@ -8,26 +8,32 @@ const auth = require('../middleware/authMiddleware'); // 👈 Added for secure p
 // @route   POST /api/auth/register
 router.post('/register', async (req, res) => {
   try {
-    // 👇 1. Added email here
-    const { name, phone, email, password } = req.body;
+    // 👇 1. Added referralCode to the incoming data
+    const { name, phone, email, password, referralCode } = req.body;
 
     if (!name || !phone || !password) {
       return res.status(400).json({ message: 'Please provide name, phone, and password.' });
     }
 
     let user = await User.findOne({ phone });
-    if (user) {
-      return res.status(400).json({ message: 'User already exists' });
+    if (user) return res.status(400).json({ message: 'User already exists' });
+
+    // 👇 2. Check if a valid referral code was used
+    let referredBy = null;
+    if (referralCode) {
+      const referrer = await User.findOne({ uniqueId: referralCode });
+      if (referrer) {
+        referredBy = referrer.uniqueId; // Lock them to their parent!
+      }
     }
 
-    // Grab the last two digits of the current year automatically!
     const year = new Date().getFullYear().toString().slice(-2);
     const uniqueId = `${year}SBGA-` + Math.floor(100000 + Math.random() * 900000).toString();
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // 👇 2. Added email here so it saves to the database!
-    user = new User({ name, phone, email, password: hashedPassword, uniqueId });
+    // 👇 3. Save the referredBy tag into the database
+    user = new User({ name, phone, email, password: hashedPassword, uniqueId, referredBy });
     await user.save();
 
     const payload = { user: { id: user.id } };

@@ -1,17 +1,16 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-  uniqueId: { type: String, required: true, unique: true }, // The new generated ID (e.g., TC-123456)
   name: { type: String, required: true },
-  phone: { type: String, required: true, unique: true }, // Phone is now required and unique
-  email: { type: String, default: '' }, // Email is now optional
+  phone: { type: String, required: true, unique: true },
+  email: { type: String },
   password: { type: String, required: true },
-  referralCodeUsed: { type: String, default: '' }, // Tracks who referred them
-  role: { type: String, default: 'Customer' },
+  uniqueId: { type: String, required: true, unique: true },
+  role: { type: String, default: 'user' },
   walletBalance: { type: Number, default: 0 },
-  networkTransfers: [{
-    recipientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
-  }]
-}, { timestamps: true });
+  // 👇 NEW: Tracks who invited them! (Null if they are a top-level user)
+  referredBy: { type: String, default: null }, 
+  createdAt: { type: Date, default: Date.now }
+});
 
 module.exports = mongoose.model('User', userSchema);
