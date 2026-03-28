@@ -155,5 +155,16 @@ router.delete('/delete-user/:id', auth, async (req, res) => {
     res.status(500).json({ message: 'Server error deleting user.' });
   }
 });
-
+// 👇 NEW: Fetch Global Network Ledger for Admin Graph 👇
+router.get('/all-transactions', auth, async (req, res) => {
+  try {
+    const transactions = await Transaction.find()
+      .populate('sender', 'name phone')
+      .populate('recipient', 'name phone')
+      .sort({ date: -1 }); // Newest first
+    res.json(transactions);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error fetching network ledger' });
+  }
+});
 module.exports = router;

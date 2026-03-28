@@ -8,6 +8,7 @@ import AddFunds from './components/AddFunds';
 import AdminDashboard from './components/AdminDashboard';
 import ResetPassword from './components/ResetPassword';
 import EditProfile from './components/EditProfile';
+import './index.css';
 
 function App() {
   return (

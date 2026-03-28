@@ -1,0 +1,48 @@
+/* =========================================
+   📱 MOBILE RESPONSIVENESS OVERRIDES 📱
+   ========================================= */
+@media screen and (max-width: 768px) {
+  /* 1. Shrink massive paddings on mobile */
+  div[style*="padding: 40px"],
+  div[style*="padding: 20px"] {
+    padding: 15px !important;
+  }
+
+  div[style*="padding: 25px"] {
+    padding: 15px !important;
+  }
+
+  /* 2. Shrink massive text sizes */
+  h1 { font-size: 24px !important; }
+  h2 { font-size: 22px !important; }
+  
+  /* Target the giant wallet balance numbers */
+  p[style*="fontSize: 64px"] {
+    font-size: 48px !important;
+  }
+
+  /* 3. Make sure Tables don't break the screen width */
+  table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap; /* Keeps text on one line so you can swipe right */
+  }
+
+  th, td {
+    padding: 10px !important;
+    font-size: 13px !important;
+  }
+
+  /* 4. Make Dashboard cards stack neatly */
+  div[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* 5. Fix time filter buttons to wrap nicely */
+  button[style*="padding: 8px 15px"] {
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+  }
+}
