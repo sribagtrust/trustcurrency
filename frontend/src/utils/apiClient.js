@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API = 'https://api.thetrustcurrency.com:5000'; // This should match the backend URL in production, and can be overridden by .env for local development
+const API = import.meta.env.VITE_API_URL || 'https://api.thetrustcurrency.com'; // This should match the backend URL in production, and can be overridden by .env for local development
 
 // Create axios instance with base URL
 const apiClient = axios.create({
