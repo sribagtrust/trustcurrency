@@ -58,16 +58,13 @@ if (!mongoUri) {
 }
 
 mongoose
-  .connect(mongoUri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(mongoUri)
   .then(() => console.log('Connected to MongoDB'))
   .catch((err) => {
     console.error('MongoDB connection error:', err);
     process.exit(1);
   });
-
+  
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/wallet', walletRoutes);
