@@ -41,12 +41,14 @@ const corsOptions = {
     'Accept',
     'X-Requested-With',
     'Origin',
+    'x-auth-token',
     'Access-Control-Allow-Origin',
   ],
   optionsSuccessStatus: 204,
 };
 
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -64,7 +66,7 @@ mongoose
     console.error('MongoDB connection error:', err);
     process.exit(1);
   });
-  
+
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/wallet', walletRoutes);
