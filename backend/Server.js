@@ -19,22 +19,31 @@ const app = express();
 
 // CORS Configuration for production and development
 const allowedOrigins = [
-  process.env.FRONTEND_URL || 'https://trustcurrency.com'||'https://www.trustcurrency.com'||'https://d1o6n27q1nzv65.cloudfront.net', // Production frontend URL
-  'http://localhost:5173', // Local development
-  'http://localhost:3000', // Alternative local dev port
-];
+  process.env.FRONTEND_URL,
+  'https://trustcurrency.com',
+  'https://www.trustcurrency.com',
+  'https://thetrustcurrency.com',
+  'https://www.thetrustcurrency.com',
+  'https://d1o6n27q1nzv65.cloudfront.net',
+  'http://localhost:5173',
+  'http://localhost:3000',
+].filter(Boolean);
 
 const corsOptions = {
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.warn(`CORS blocked for origin: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
   optionsSuccessStatus: 200,
 };
+
+// Activate CORS preflight for all routes
+app.options('*', cors(corsOptions));
 
 // Middleware
 app.use(cors(corsOptions));
