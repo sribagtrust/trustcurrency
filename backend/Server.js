@@ -42,11 +42,9 @@ const corsOptions = {
   optionsSuccessStatus: 200,
 };
 
-// Activate CORS preflight for all routes
-app.options('*', cors(corsOptions));
-
 // Middleware
 app.use(cors(corsOptions));
+app.options('/*', cors(corsOptions));
 app.use(express.json());
 app.use('/uploads', express.static('uploads')); // This makes the images public to the Admin
 
@@ -64,6 +62,15 @@ app.use('/api/admin', adminRoutes);
 // A simple test route
 app.get('/', (req, res) => {
   res.send('TrustCoin API is running!');
+});
+
+// Handle unknown routes
+app.all('/*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'API endpoint not found',
+    path: req.originalUrl,
+  });
 });
 
 // Start the server
