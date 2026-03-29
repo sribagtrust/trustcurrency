@@ -3,22 +3,18 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
 
-// Import your models
-const User = require('./models/User');
-const Plan = require('./models/Plan');
-const Transaction = require('./models/Transaction');
-const Store = require('./models/Store');
-
-// Import your routes
-const authRoutes = require('./routes/auth'); // <-- ADD THIS LINE
+// Import routes
+const authRoutes = require('./routes/auth');
 const walletRoutes = require('./routes/wallet');
 const transactionRoutes = require('./routes/transaction');
 const adminRoutes = require('./routes/admin');
+
 const app = express();
 
-// CORS Configuration for production and development
-const allowedOrigins = [
+// CORS configuration
+const allowedOrigins = new Set([
   process.env.FRONTEND_URL,
   'https://trustcurrency.com',
   'https://www.trustcurrency.com',
@@ -27,54 +23,83 @@ const allowedOrigins = [
   'https://d1o6n27q1nzv65.cloudfront.net',
   'http://localhost:5173',
   'http://localhost:3000',
-].filter(Boolean);
+].filter(Boolean));
 
 const corsOptions = {
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || allowedOrigins.has(origin)) {
       callback(null, true);
     } else {
-      console.warn(`CORS blocked for origin: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
+      callback(new Error(`Not allowed by CORS: ${origin}`));
     }
   },
   credentials: true,
-  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'Accept',
+    'X-Requested-With',
+    'Origin',
+    'Access-Control-Allow-Origin',
+  ],
+  optionsSuccessStatus: 204,
 };
 
-// Middleware
 app.use(cors(corsOptions));
-app.options('/*', cors(corsOptions));
 app.use(express.json());
-app.use('/uploads', express.static('uploads')); // This makes the images public to the Admin
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('Successfully connected to the Trust Database'))
-  .catch((err) => console.error('Database connection error:', err));
+// MongoDB connection
+const mongoUri = process.env.MONGO_URI;
+if (!mongoUri) {
+  console.error('Missing MONGO_URI in environment');
+  process.exit(1);
+}
 
-// Route Middlewares
-app.use('/api/auth', authRoutes); // <-- ADD THIS LINE
+mongoose
+  .connect(mongoUri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log('Connected to MongoDB'))
+  .catch((err) => {
+    console.error('MongoDB connection error:', err);
+    process.exit(1);
+  });
+
+// API routes
+app.use('/api/auth', authRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/admin', adminRoutes);
 
-// A simple test route
+// Health check route
 app.get('/', (req, res) => {
-  res.send('TrustCoin API is running!');
+  res.status(200).send('API is running');
 });
 
-// Handle unknown routes
-app.all('/*', (req, res) => {
+// Fallback 404 (no wildcard route usage)
+app.use((req, res) => {
   res.status(404).json({
     success: false,
-    message: 'API endpoint not found',
+    message: 'Route not found',
     path: req.originalUrl,
   });
 });
 
-// Start the server
-const PORT = process.env.PORT || 5005;
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(err.status || 500).json({
+    success: false,
+    error: err.message || 'Internal Server Error',
+  });
+  next();
+});
+
+// Start server
+const PORT = parseInt(process.env.PORT, 10) || 5005;
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Server listening on port ${PORT}`);
 });
