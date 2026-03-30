@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import apiClient from '../utils/apiClient';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { User, Phone, Mail, Hash, ArrowUpRight, ArrowDownLeft, Clock, AlertTriangle } from 'lucide-react';
+import { User, Phone, Mail, Hash, ArrowUpRight, ArrowDownLeft, Clock } from 'lucide-react';
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -27,6 +27,15 @@ function Dashboard() {
   const [error, setError] = useState('');
   const [timeFilter, setTimeFilter] = useState('all'); 
   const navigate = useNavigate();
+
+  // 👇 State to track screen size for the Recharge Button 👇
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -90,24 +99,6 @@ function Dashboard() {
     return filteredPoints.reverse();
   };
 
-  // 👇 NEW: Handle Exit Account Logic 👇
-  const handleExitAccount = async () => {
-    const confirmExit = window.confirm(
-      "WARNING: Are you absolutely sure you want to close your account? \n\nThis will instantly permanently delete your profile, erase your remaining balance, and transfer all of your sub-users directly to the Admin. This action cannot be undone."
-    );
-
-    if (!confirmExit) return;
-
-    try {
-      await apiClient.delete('/api/wallet/exit-account');
-      localStorage.removeItem('token');
-      localStorage.removeItem('role');
-      navigate('/login');
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to close account.');
-    }
-  };
-
   const graphData = getFilteredGraphData();
 
   if (!dashboardData && !error) return <h2 style={{ textAlign: 'center', marginTop: '50px' }}>Loading your secure dashboard...</h2>;
@@ -125,21 +116,28 @@ function Dashboard() {
 
       {dashboardData && (
         <>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h2 style={{ fontSize: '28px', color: '#333', margin: 0 }}>Dashboard Overview</h2>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button 
-                onClick={() => navigate('/add-funds')}
-                style={{ padding: '12px 24px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', fontWeight: 'bold', boxShadow: '0 4px 6px rgba(40,167,69,0.2)' }}
-              >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
+            {/* 👇 Responsive Title 👇 */}
+            <h2 style={{ fontSize: isMobile ? '22px' : '28px', color: '#333', margin: 0 }}>Dashboard Overview</h2>
+            
+            {/* 👇 Responsive Button: Shrinks padding and font size on mobile 👇 */}
+            <button 
+              onClick={() => navigate('/add-funds')}
+              style={{ 
+                padding: isMobile ? '10px 16px' : '12px 24px', 
+                backgroundColor: '#28a745', 
+                color: 'white', 
+                border: 'none', 
+                borderRadius: '8px', 
+                cursor: 'pointer', 
+                fontSize: isMobile ? '14px' : '16px', 
+                fontWeight: 'bold', 
+                boxShadow: '0 4px 6px rgba(40,167,69,0.2)' 
+              }}
+            >
               + Request Recharge
-            </button>              <button
-                onClick={handleExitAccount}
-                style={{ padding: '12px 24px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', fontWeight: 'bold', boxShadow: '0 4px 6px rgba(220,53,69,0.2)' }}
-              >
-                Close Account
-              </button>
-            </div>          </div>
+            </button>
+          </div>
 
           {/* SUB-USER REVIEW QUEUE */}
           {dashboardData.pendingSubRequests && dashboardData.pendingSubRequests.length > 0 && (
@@ -171,7 +169,7 @@ function Dashboard() {
                           try {
                             await apiClient.post(`/api/wallet/resolve-sub-request/${req._id}`, { action: 'Reject' });
                             window.location.reload();
-                          } catch { alert('Error rejecting request'); }
+                          } catch (err) { alert('Error rejecting request'); }
                         }} 
                         style={{ padding: '10px 20px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
                         Reject
@@ -187,6 +185,7 @@ function Dashboard() {
             <div style={{ padding: '25px', backgroundColor: 'white', border: '1px solid #e9ecef', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <h3 style={{ margin: 0, color: '#6c757d', fontSize: '14px', textTransform: 'uppercase' }}>User Profile</h3>
+                
                 <button 
                   onClick={() => navigate('/edit-profile')} 
                   style={{ padding: '5px 12px', fontSize: '12px', backgroundColor: '#e9ecef', color: '#495057', border: '1px solid #ced4da', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}
