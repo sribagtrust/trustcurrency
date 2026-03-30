@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import apiClient from '../utils/apiClient';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle, XCircle, Users, Clock, Eye, AlertCircle, LayoutDashboard, List, UserPlus, Activity } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { CheckCircle, XCircle, Users, Clock, Eye, AlertCircle, LayoutDashboard, List, UserPlus, Activity, ShieldCheck, XOctagon } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5005';
 
@@ -11,7 +11,7 @@ const AdminTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div style={{ backgroundColor: 'white', padding: '15px', border: '1px solid #e9ecef', borderRadius: '8px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
+      <div style={{ backgroundColor: 'white', padding: '15px', border: '1px solid #e9ecef', borderRadius: '8px', boxShadow: '0 8px 20px rgba(0,0,0,0.1)' }}>
         <p style={{ margin: '0 0 10px 0', color: '#6c757d', fontSize: '13px', fontWeight: 'bold' }}>{label}</p>
         <p style={{ margin: '0 0 5px 0', color: '#333', fontSize: '16px', fontWeight: 'bold' }}>
           Transfer Volume: <span style={{ color: '#007bff' }}>{data.Amount} Currency</span>
@@ -110,7 +110,6 @@ function AdminDashboard() {
     }
   };
 
-  // 👇 DYNAMIC GRAPH ALGORITHM 👇
   const getFilteredGraphData = () => {
     if (!allTransactions || allTransactions.length === 0) return [];
     
@@ -135,7 +134,7 @@ function AdminDashboard() {
       filteredPoints = allPoints.filter(p => p.rawDate >= cutoff);
     }
     
-    return filteredPoints.reverse(); // Oldest to Newest
+    return filteredPoints.reverse(); 
   };
 
   const graphData = getFilteredGraphData();
@@ -149,10 +148,10 @@ function AdminDashboard() {
   });
 
   const filterBtnStyle = (filterValue) => ({
-    padding: '8px 15px', border: '1px solid #007bff',
+    padding: '6px 14px', border: '1px solid #007bff', borderRadius: '20px',
     backgroundColor: timeFilter === filterValue ? '#007bff' : 'white',
     color: timeFilter === filterValue ? 'white' : '#007bff',
-    cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', transition: 'all 0.2s'
+    cursor: 'pointer', fontWeight: 'bold', fontSize: '13px', transition: 'all 0.2s'
   });
 
   return (
@@ -183,14 +182,18 @@ function AdminDashboard() {
 
       <div style={{ display: 'flex', gap: '15px', marginBottom: '30px', flexWrap: 'wrap' }}>
         <button style={tabStyle('overview')} onClick={() => setActiveTab('overview')}><LayoutDashboard size={20} /> Operations Overview</button>
-        <button style={tabStyle('directory')} onClick={() => setActiveTab('directory')}><List size={20} /> Master User Directory</button>
-        <button style={tabStyle('adduser')} onClick={() => setActiveTab('adduser')}><UserPlus size={20} /> Create New User</button>
+        <button style={tabStyle('directory')} onClick={() => setActiveTab('directory')}><List size={20} /> Master Directory</button>
+        <button style={tabStyle('adduser')} onClick={() => setActiveTab('adduser')}><UserPlus size={20} /> Create User</button>
       </div>
 
       {activeTab === 'overview' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', alignItems: 'start' }}>
-          <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+        /* 👇 NEW FLUID GRID: This auto-adjusts from 2 columns to 1 seamlessly 👇 */
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 400px), 1fr))', gap: '30px', alignItems: 'start' }}>
+          
+          {/* --- REVIEW QUEUE --- */}
+          <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', minWidth: 0 }}>
             <h2 style={{ margin: '0 0 20px 0', borderBottom: '2px solid #f8f9fa', paddingBottom: '10px' }}>Review Queue</h2>
+            
             {requests.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '40px 0', color: '#6c757d' }}>
                 <CheckCircle size={48} color="#28a745" style={{ marginBottom: '10px' }} />
@@ -200,28 +203,42 @@ function AdminDashboard() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 {requests.map(req => (
-                  <div key={req._id} style={{ border: '1px solid #dee2e6', borderRadius: '10px', padding: '15px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8f9fa', paddingBottom: '10px' }}>
+                  /* 👇 REDESIGNED FINTECH TICKET CARD 👇 */
+                  <div key={req._id} style={{ border: '1px solid #e9ecef', borderRadius: '12px', padding: '20px', backgroundColor: '#ffffff', boxShadow: '0 4px 10px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                    
+                    {/* Header: User & Amount */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px' }}>
                       <div>
-                        <p style={{ margin: 0, fontWeight: 'bold', color: '#333', fontSize: '18px' }}>{req.user?.name || 'Unknown User'}</p>
-                        <p style={{ margin: '5px 0 0 0', color: '#6c757d', fontSize: '14px' }}>📞 {req.user?.phone}</p>
-                        <p style={{ margin: '5px 0 0 0', color: '#007bff', fontSize: '14px', fontWeight: 'bold' }}>ID: {req.user?.uniqueId}</p>
+                        <h4 style={{ margin: '0 0 5px 0', fontSize: '18px', color: '#212529' }}>{req.user?.name || 'Unknown User'}</h4>
+                        <span style={{ backgroundColor: '#e9f2ff', color: '#007bff', padding: '4px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold' }}>ID: {req.user?.uniqueId}</span>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <p style={{ margin: 0, color: '#6c757d', fontSize: '12px', textTransform: 'uppercase' }}>Requested</p>
-                        <p style={{ margin: 0, color: '#28a745', fontSize: '24px', fontWeight: 'bold' }}>{req.amountRequested} Currency</p>
-                        <p style={{ margin: '5px 0 0 0', color: '#dc3545', fontSize: '12px', fontWeight: 'bold', backgroundColor: '#fff1f0', padding: '2px 6px', borderRadius: '4px', display: 'inline-block' }}>
-                          UTR: {req.utrNumber || 'N/A'}
-                        </p>
+                        <p style={{ margin: 0, fontSize: '11px', color: '#6c757d', textTransform: 'uppercase', fontWeight: 'bold' }}>Requested</p>
+                        <p style={{ margin: 0, fontSize: '24px', fontWeight: 'bold', color: '#28a745' }}>{req.amountRequested} <span style={{fontSize: '14px', color: '#6c757d'}}>Curr</span></p>
                       </div>
                     </div>
-                    <div style={{ backgroundColor: '#f8f9fa', height: '150px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '1px solid #ced4da', position: 'relative' }} onClick={() => setSelectedImage(`${API_BASE_URL}${req.screenshotPath}`)}>
-                      <img src={`${API_BASE_URL}${req.screenshotPath}`} alt="Proof" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }} />
-                      <div style={{ position: 'absolute', backgroundColor: 'rgba(0,0,0,0.6)', color: 'white', padding: '5px 15px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '5px' }}><Eye size={16} /> Enlarge</div>
+
+                    {/* Body: Details Box */}
+                    <div style={{ backgroundColor: '#f8f9fa', padding: '12px', borderRadius: '8px', border: '1px dashed #ced4da' }}>
+                      <p style={{ margin: '0 0 5px 0', fontSize: '13px', color: '#495057', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <Phone size={14} /> {req.user?.phone}
+                      </p>
+                      {/* 👇 wordBreak prevents long UTRs from breaking the screen width 👇 */}
+                      <p style={{ margin: 0, fontSize: '13px', color: '#dc3545', fontWeight: 'bold', wordBreak: 'break-all' }}>
+                        UTR: {req.utrNumber || 'N/A'}
+                      </p>
                     </div>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                      <button onClick={() => handleResolve(req._id, 'Approve')} style={{ flex: 1, padding: '12px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>Approve</button>
-                      <button onClick={() => handleResolve(req._id, 'Reject')} style={{ flex: 1, padding: '12px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>Reject</button>
+
+                    {/* Proof Image */}
+                    <div style={{ backgroundColor: '#e9ecef', height: '140px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }} onClick={() => setSelectedImage(`${API_BASE_URL}${req.screenshotPath}`)}>
+                      <img src={`${API_BASE_URL}${req.screenshotPath}`} alt="Proof" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9 }} />
+                      <div style={{ position: 'absolute', backgroundColor: 'rgba(0,0,0,0.7)', color: 'white', padding: '6px 12px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 'bold' }}><Eye size={14} /> View Proof</div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
+                      <button onClick={() => handleResolve(req._id, 'Approve')} style={{ flex: 1, padding: '12px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}><ShieldCheck size={18} /> Approve</button>
+                      <button onClick={() => handleResolve(req._id, 'Reject')} style={{ flex: 1, padding: '12px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}><XOctagon size={18} /> Reject</button>
                     </div>
                   </div>
                 ))}
@@ -229,12 +246,15 @@ function AdminDashboard() {
             )}
           </div>
 
-          <div style={{ padding: '25px', backgroundColor: 'white', border: '1px solid #e9ecef', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', marginBottom: '30px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px', marginBottom: '20px' }}>
+          {/* --- LIVE GRAPH --- */}
+          <div style={{ padding: '25px', backgroundColor: 'white', border: '1px solid #e9ecef', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', minWidth: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px', marginBottom: '25px' }}>
               <h3 style={{ margin: 0, color: '#333', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Activity size={20} color="#007bff" /> Live Network Volume
+                <Activity size={20} color="#007bff" /> Network Volume
               </h3>
-              <div style={{ display: 'flex', overflow: 'hidden', borderRadius: '8px', border: '1px solid #007bff' }}>
+              
+              {/* 👇 Flex-wrap ensures buttons drop to next line instead of causing side-scroll 👇 */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                 <button style={filterBtnStyle('all')} onClick={() => setTimeFilter('all')}>ALL</button>
                 <button style={filterBtnStyle('6h')} onClick={() => setTimeFilter('6h')}>6H</button>
                 <button style={filterBtnStyle('12h')} onClick={() => setTimeFilter('12h')}>12H</button>
@@ -242,20 +262,27 @@ function AdminDashboard() {
                 <button style={filterBtnStyle('week')} onClick={() => setTimeFilter('week')}>1W</button>
                 <button style={filterBtnStyle('month')} onClick={() => setTimeFilter('month')}>1M</button>
               </div>
-            </div>ṇ
+            </div>
             
-            <div style={{ height: '400px', width: '100%' }}>
+            <div style={{ height: '380px', width: '100%', minWidth: 0 }}>
               {graphData.length === 0 ? (
                 <div style={{ height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#6c757d' }}><p>No network transactions yet.</p></div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={graphData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e0e0e0" />
-                    <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fill: '#6c757d', fontSize: 12 }} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6c757d' }} />
+                  {/* 👇 Upgraded to a sleek AreaChart with a Gradient 👇 */}
+                  <AreaChart data={graphData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#007bff" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#007bff" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f3f5" />
+                    <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fill: '#adb5bd', fontSize: 11 }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#adb5bd', fontSize: 11 }} />
                     <Tooltip content={<AdminTooltip />} />
-                    <Line type="monotone" dataKey="Amount" stroke="#007bff" strokeWidth={3} dot={{ r: 4, fill: '#007bff', strokeWidth: 2, stroke: 'white' }} activeDot={{ r: 8 }} />
-                  </LineChart>
+                    <Area type="monotone" dataKey="Amount" stroke="#007bff" strokeWidth={3} fillOpacity={1} fill="url(#colorAmount)" activeDot={{ r: 6, strokeWidth: 0 }} />
+                  </AreaChart>
                 </ResponsiveContainer>
               )}
             </div>
@@ -269,7 +296,7 @@ function AdminDashboard() {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead>
-                <tr style={{ backgroundColor: '#f8f9fa', color: '#495057', fontSize: '14px', textTransform: 'uppercase' }}>
+                <tr style={{ backgroundColor: '#f8f9fa', color: '#495057', fontSize: '13px', textTransform: 'uppercase' }}>
                   <th style={{ padding: '15px', borderBottom: '2px solid #dee2e6' }}>User Details</th>
                   <th style={{ padding: '15px', borderBottom: '2px solid #dee2e6' }}>Contact Info</th>
                   <th style={{ padding: '15px', borderBottom: '2px solid #dee2e6' }}>Agent (Referred By)</th>
@@ -281,27 +308,27 @@ function AdminDashboard() {
                 {allUsers.map((user, index) => (
                   <tr key={index} style={{ borderBottom: '1px solid #e9ecef', transition: 'background-color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}>
                     <td style={{ padding: '15px' }}>
-                      <p style={{ margin: 0, fontWeight: 'bold', color: '#333', fontSize: '16px' }}>{user.name}</p>
-                      <p style={{ margin: '5px 0 0 0', color: '#007bff', fontSize: '13px', fontWeight: 'bold' }}>ID: {user.uniqueId}</p>
+                      <p style={{ margin: 0, fontWeight: 'bold', color: '#333', fontSize: '15px' }}>{user.name}</p>
+                      <p style={{ margin: '5px 0 0 0', color: '#007bff', fontSize: '12px', fontWeight: 'bold' }}>ID: {user.uniqueId}</p>
                     </td>
                     <td style={{ padding: '15px', color: '#495057' }}>
-                      <p style={{ margin: 0 }}>📞 {user.phone}</p>
+                      <p style={{ margin: 0, fontSize: '14px' }}>📞 {user.phone}</p>
                       {user.email && <p style={{ margin: '5px 0 0 0', fontSize: '13px' }}>✉️ {user.email}</p>}
                     </td>
                     <td style={{ padding: '15px' }}>
                       {user.referredBy ? (
-                        <span style={{ color: '#007bff', fontWeight: 'bold', backgroundColor: '#e9f2ff', padding: '5px 10px', borderRadius: '5px' }}>🔗 {user.referredBy}</span>
+                        <span style={{ color: '#007bff', fontWeight: 'bold', backgroundColor: '#e9f2ff', padding: '4px 8px', borderRadius: '6px', fontSize: '13px' }}>🔗 {user.referredBy}</span>
                       ) : (
-                        <span style={{ color: '#6c757d', fontStyle: 'italic' }}>None (Direct)</span>
+                        <span style={{ color: '#adb5bd', fontStyle: 'italic', fontSize: '13px' }}>None (Direct)</span>
                       )}
                     </td>
                     <td style={{ padding: '15px' }}>
-                      <span style={{ backgroundColor: user.role === 'admin' ? '#ffeeba' : '#e9ecef', color: user.role === 'admin' ? '#856404' : '#495057', padding: '5px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                      <span style={{ backgroundColor: user.role === 'admin' ? '#ffeeba' : '#e9ecef', color: user.role === 'admin' ? '#856404' : '#495057', padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase' }}>
                         {user.role || 'User'}
                       </span>
                     </td>
-                    <td style={{ padding: '15px', fontWeight: 'bold', fontSize: '18px', color: '#28a745' }}>
-                      {user.walletBalance} Currency
+                    <td style={{ padding: '15px', fontWeight: 'bold', fontSize: '16px', color: '#28a745' }}>
+                      {user.walletBalance}
                     </td>
                   </tr>
                 ))}
