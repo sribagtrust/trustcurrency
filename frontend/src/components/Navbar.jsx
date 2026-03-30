@@ -47,7 +47,7 @@ function Navbar() {
       >
         {/* 👇 Your Company Logo 👇 */}
         <img 
-          src="public/images/sbgalogo.png" 
+          src="./sbgalogo.png" 
           alt="Trust Currency Logo" 
           style={{ width: '40px', height: '36px', objectFit: 'cover' }} 
         />
