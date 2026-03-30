@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import apiClient from '../utils/apiClient';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { User, Phone, Mail, Hash, ArrowUpRight, ArrowDownLeft, Clock } from 'lucide-react';
+// 👇 FIX: Added 'Phone' to this import line 👇
+import { User, Mail, Hash, ArrowUpRight, ArrowDownLeft, Clock, Phone } from 'lucide-react';
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -117,10 +118,10 @@ function Dashboard() {
       {dashboardData && (
         <>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
-            {/* 👇 Responsive Title 👇 */}
+            {/* Responsive Title */}
             <h2 style={{ fontSize: isMobile ? '22px' : '28px', color: '#333', margin: 0 }}>Dashboard Overview</h2>
             
-            {/* 👇 Responsive Button: Shrinks padding and font size on mobile 👇 */}
+            {/* Responsive Button */}
             <button 
               onClick={() => navigate('/add-funds')}
               style={{ 
@@ -169,7 +170,7 @@ function Dashboard() {
                           try {
                             await apiClient.post(`/api/wallet/resolve-sub-request/${req._id}`, { action: 'Reject' });
                             window.location.reload();
-                          } catch (err) { alert('Error rejecting request'); }
+                          } catch (err) { alert(err.response?.data?.message || 'Error rejecting request'); }
                         }} 
                         style={{ padding: '10px 20px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
                         Reject
