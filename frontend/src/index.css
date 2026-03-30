@@ -1,48 +1,144 @@
 /* =========================================
-   📱 MOBILE RESPONSIVENESS OVERRIDES 📱
+   🌐 GLOBAL APP STYLING (All Devices)
+   ========================================= */
+body {
+  background-color: #f4f7f6; /* Soft premium background so white cards "pop" */
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Hide ugly horizontal scrollbars for clean swiping */
+::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #ced4da;
+  border-radius: 10px;
+}
+
+/* =========================================
+   📱 PREMIUM MOBILE UI OVERRIDES
+   (Only applies to phones and small tablets)
    ========================================= */
 @media screen and (max-width: 768px) {
-  /* 1. Shrink massive paddings on mobile */
+  
+  /* --- 1. EDGE-TO-EDGE SPACING --- */
+  /* Reduces massive desktop margins so content fills the phone screen */
   div[style*="padding: 40px"],
   div[style*="padding: 20px"] {
-    padding: 15px !important;
+    padding: 12px !important;
   }
 
-  div[style*="padding: 25px"] {
-    padding: 15px !important;
+  /* --- 2. MODERN FLOATING CARDS --- */
+  div[style*="box-shadow"],
+  div[style*="boxShadow"] {
+    padding: 20px !important;
+    border-radius: 16px !important; /* Premium round corners */
+    box-shadow: 0 8px 24px rgba(0,0,0,0.04) !important; /* Soft, deep shadow */
+    margin-bottom: 16px !important;
+    border: none !important; /* Removes harsh borders */
+    background: #ffffff !important;
   }
 
-  /* 2. Shrink massive text sizes */
-  h1 { font-size: 24px !important; }
-  h2 { font-size: 22px !important; }
+  /* --- 3. SMART TYPOGRAPHY SCALING --- */
+  h1 { font-size: 24px !important; margin-bottom: 15px !important; }
+  h2 { font-size: 20px !important; }
+  h3 { font-size: 16px !important; }
   
-  /* Target the giant wallet balance numbers */
-  p[style*="fontSize: 64px"] {
-    font-size: 48px !important;
+  /* Shrink the massive "64px" wallet balance for mobile */
+  p[style*="fontSize: 64px"], 
+  p[style*="font-size: 64px"] {
+    font-size: 42px !important;
+    margin: 5px 0 !important;
   }
 
-  /* 3. Make sure Tables don't break the screen width */
-  table {
-    display: block;
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    white-space: nowrap; /* Keeps text on one line so you can swipe right */
+  /* --- 4. APPLE/ANDROID TOUCH STANDARDS --- */
+  button {
+    min-height: 48px !important; /* Perfect height for thumb taps */
+    border-radius: 12px !important;
+    font-size: 15px !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
   }
 
-  th, td {
-    padding: 10px !important;
-    font-size: 13px !important;
+  /* Fix the Time Filter buttons (6H, 12H, 1D) into modern "Pills" */
+  div[style*="overflow: hidden"][style*="border-radius: 8px"] {
+    border: none !important;
+    overflow-x: auto !important;
+    display: flex !important;
+    gap: 8px !important;
+    padding-bottom: 5px !important;
+  }
+  
+  div[style*="overflow: hidden"] > button {
+    border: 1px solid #007bff !important;
+    border-radius: 20px !important; /* Pill shape */
+    padding: 6px 16px !important;
+    min-height: 36px !important; /* Slightly smaller for pills */
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
   }
 
-  /* 4. Make Dashboard cards stack neatly */
-  div[style*="grid-template-columns"] {
+  /* --- 5. CLEAN FLUID GRIDS --- */
+  /* Stack dashboard cards vertically */
+  div[style*="grid-template-columns"],
+  div[style*="gridTemplateColumns"] {
     grid-template-columns: 1fr !important;
+    gap: 15px !important;
+  }
+  
+  /* Exception: Keep Currency Packages in a perfect 2-column grid on mobile */
+  form div[style*="grid"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  
+  /* Make Currency Packages look like tap-able buttons */
+  form div[style*="cursor: 'pointer'"],
+  form div[style*="cursor: pointer"] {
+    padding: 12px !important;
+    border-radius: 12px !important;
   }
 
-  /* 5. Fix time filter buttons to wrap nicely */
-  button[style*="padding: 8px 15px"] {
-    padding: 6px 10px !important;
+  /* --- 6. SWIPEABLE LEDGER TABLES --- */
+  .recharts-responsive-container {
+    min-height: 250px !important; /* Prevent graph from taking up whole screen */
+  }
+
+  /* Pull tables to the edges for a clean swipe effect */
+  table {
+    display: block !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    white-space: nowrap !important; /* Keeps text on one line */
+    border: none !important;
+  }
+
+  th {
     font-size: 12px !important;
+    padding: 15px 10px !important;
+    background-color: #f8f9fa !important;
+    border-bottom: 2px solid #e9ecef !important;
+  }
+  
+  td {
+    font-size: 14px !important;
+    padding: 15px 10px !important;
+    border-bottom: 1px solid #f1f3f5 !important;
+  }
+  
+  /* Make inputs bigger for mobile typing */
+  input {
+    min-height: 48px !important;
+    font-size: 16px !important; /* Prevents iPhones from auto-zooming */
+    border-radius: 10px !important;
   }
 }
