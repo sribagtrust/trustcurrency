@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcryptjs'); // 👈 ADDED BCRYPT FOR PASSWORD CHECK
+const bcrypt = require('bcryptjs');
 const auth = require('../middleware/authMiddleware');
 const User = require('../models/User');
 const Transaction = require('../models/Transaction');
@@ -15,6 +15,22 @@ const storage = multer.diskStorage({
   }
 });
 const upload = multer({ storage });
+
+// 👇 THE PRICING PLAN ALGORITHM FOR THE BACKEND 👇
+const getRupeeCost = (currencyAmount) => {
+  const plans = [
+    { rupees: 39, currency: 250 },
+    { rupees: 50.50, currency: 500 },
+    { rupees: 76.50, currency: 1000 },
+    { rupees: 126.50, currency: 2000 },
+    { rupees: 276.50, currency: 5000 },
+    { rupees: 533.00, currency: 10000 },
+    { rupees: 1303.00, currency: 20000 }
+  ];
+  // Find the exact plan, otherwise fallback to the raw amount (prevents breaking on custom amounts)
+  const plan = plans.find(p => p.currency === Number(currencyAmount));
+  return plan ? plan.rupees : Number(currencyAmount); 
+};
 
 router.get('/dashboard-data', auth, async (req, res) => {
   try {
@@ -70,16 +86,22 @@ router.post('/resolve-sub-request/:id', auth, async (req, res) => {
 
     if (action === 'Approve') {
       const subUser = await User.findById(request.user);
+      
+      // 👇 USE THE ALGORITHM TO FIND THE ACTUAL COST (e.g., 39 instead of 250) 👇
+      const costToAgent = getRupeeCost(request.amountRequested);
 
-      if (agent.walletBalance < request.amountRequested) {
-        return res.status(400).json({ message: 'You do not have enough Currency to approve this!' });
+      // Check if the Agent has enough to cover the RUPEE cost
+      if (agent.walletBalance < costToAgent) {
+        return res.status(400).json({ message: `Insufficient balance! You need at least ₹${costToAgent} to approve this request.` });
       }
       if (subUser.walletBalance + request.amountRequested > 20000) {
         return res.status(400).json({ message: 'Approval Blocked: Exceeds sub-user maximum limit.' });
       }
 
-      agent.walletBalance -= request.amountRequested;
+      // 👇 DEDUCT THE RUPEE COST (39) FROM AGENT, BUT ADD THE CURRENCY (250) TO SUB-USER 👇
+      agent.walletBalance -= costToAgent;
       subUser.walletBalance += request.amountRequested;
+      
       request.status = 'Approved';
       
       await agent.save();
@@ -88,7 +110,7 @@ router.post('/resolve-sub-request/:id', auth, async (req, res) => {
       const newTx = new Transaction({
         sender: agent._id,
         recipient: subUser._id,
-        amount: request.amountRequested,
+        amount: request.amountRequested, // We still log "250" in the DB so the receipt shows the currency sent
         type: 'Transfer'
       });
       await newTx.save();
@@ -104,7 +126,24 @@ router.post('/resolve-sub-request/:id', auth, async (req, res) => {
   }
 });
 
-// 👇 THE UPDATED "EXIT NETWORK" ROUTE (Chain-Link Logic) 👇
+router.put('/update-profile', auth, async (req, res) => {
+  try {
+    const { name, email } = req.body;
+    const user = await User.findById(req.user.id);
+    
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (name) user.name = name;
+    if (email !== undefined) user.email = email;
+
+    await user.save();
+    res.json({ message: 'Profile updated successfully!' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error updating profile' });
+  }
+});
+
+// The Chain-Link Collapse Exit Route
 router.delete('/exit-account', auth, async (req, res) => {
   try {
     const { phone, password } = req.body;
@@ -121,16 +160,13 @@ router.delete('/exit-account', auth, async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Incorrect password.' });
 
-    // 👇 1. Find who this exiting user's Boss is (could be an ID, could be null if they are top-level)
     const grandBossId = user.referredBy;
 
-    // 👇 2. Move all their Sub-Users up the chain to the Grand-Boss!
     await User.updateMany(
       { referredBy: user.uniqueId },
       { $set: { referredBy: grandBossId } }
     );
 
-    // 👇 3. Reroute any pending requests to the Grand-Boss (Or Admin if null)
     await RechargeRequest.updateMany(
       { agentId: user.uniqueId, status: 'Pending' },
       { $set: { agentId: grandBossId || 'Admin' } }
@@ -142,24 +178,6 @@ router.delete('/exit-account', auth, async (req, res) => {
   } catch (err) {
     console.error("Exit Error:", err);
     res.status(500).json({ message: 'Server error during account exit.' });
-  }
-});
-
-// 👇 Route to handle the "Edit Profile Details" form
-router.put('/update-profile', auth, async (req, res) => {
-  try {
-    const { name, email } = req.body;
-    const user = await User.findById(req.user.id);
-    
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    if (name) user.name = name;
-    if (email !== undefined) user.email = email; // Allows clearing the email
-
-    await user.save();
-    res.json({ message: 'Profile updated successfully!' });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error updating profile' });
   }
 });
 

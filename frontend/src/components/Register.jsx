@@ -20,6 +20,14 @@ function Register() {
     e.preventDefault();
     setMessage('');
     setIsError(false);
+
+    // 👇 STRICT 10-DIGIT CHECK APPLIED HERE 👇
+    if (phone.length !== 10) {
+      setIsError(true);
+      setMessage('Phone number must be exactly 10 digits.');
+      return;
+    }
+
     try {
       await apiClient.post('/api/auth/register', {
         name,
@@ -54,7 +62,7 @@ function Register() {
 
         <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
           
-          {/* 👇 If they have a referral link, show who invited them! 👇 */}
+          {/* If they have a referral link, show who invited them! */}
           {referralCode && (
             <div style={{ backgroundColor: '#fff3cd', padding: '10px 15px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', color: '#856404', fontWeight: 'bold', fontSize: '14px', border: '1px solid #ffeeba' }}>
               <LinkIcon size={16} /> Invited by Agent ID: {referralCode}
@@ -67,7 +75,17 @@ function Register() {
           </div>
           <div>
             <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#495057', fontSize: '14px' }}>Phone Number</label>
-            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ced4da', boxSizing: 'border-box' }} />
+            {/* 👇 10-DIGIT KEYBOARD LOCK APPLIED HERE 👇 */}
+            <input 
+              type="tel" 
+              value={phone} 
+              onChange={(e) => {
+                const onlyNums = e.target.value.replace(/[^0-9]/g, '');
+                if (onlyNums.length <= 10) setPhone(onlyNums);
+              }} 
+              required 
+              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ced4da', boxSizing: 'border-box' }} 
+            />
           </div>
           <div>
             <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#495057', fontSize: '14px' }}>Email Address (Optional)</label>

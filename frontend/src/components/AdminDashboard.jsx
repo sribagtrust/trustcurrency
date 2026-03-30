@@ -97,16 +97,27 @@ function AdminDashboard() {
 
   const handleAddUser = async (e) => {
     e.preventDefault();
-    setAddUserMessage(''); setAddUserError(false);
+    setAddUserMessage(''); 
+    setAddUserError(false);
+
+    // 👇 STRICT 10-DIGIT CHECK 👇
+    if (addUserPhone.length !== 10) {
+      setAddUserError(true);
+      setAddUserMessage('Phone number must be exactly 10 digits.');
+      return;
+    }
+
     try {
       const response = await apiClient.post('/api/admin/add-user', { name: addUserName, phone: addUserPhone, email: addUserEmail, password: addUserPassword });
-      setAddUserError(false); setAddUserMessage(response.data.message);
+      setAddUserError(false); 
+      setAddUserMessage(response.data.message);
       setAddUserName(''); setAddUserPhone(''); setAddUserEmail(''); setAddUserPassword('');
       const usersRes = await apiClient.get('/api/admin/users');
       setAllUsers(usersRes.data);
       setStats(prev => ({ ...prev, totalUsers: prev.totalUsers + 1 }));
     } catch (err) {
-      setAddUserError(true); setAddUserMessage(err.response?.data?.message || 'Failed to create user. Try again.');
+      setAddUserError(true); 
+      setAddUserMessage(err.response?.data?.message || 'Failed to create user. Try again.');
     }
   };
 
@@ -187,7 +198,6 @@ function AdminDashboard() {
       </div>
 
       {activeTab === 'overview' && (
-        /* 👇 NEW FLUID GRID: This auto-adjusts from 2 columns to 1 seamlessly 👇 */
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 400px), 1fr))', gap: '30px', alignItems: 'start' }}>
           
           {/* --- REVIEW QUEUE --- */}
@@ -203,7 +213,6 @@ function AdminDashboard() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 {requests.map(req => (
-                  /* 👇 REDESIGNED FINTECH TICKET CARD 👇 */
                   <div key={req._id} style={{ border: '1px solid #e9ecef', borderRadius: '12px', padding: '20px', backgroundColor: '#ffffff', boxShadow: '0 4px 10px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', gap: '15px' }}>
                     
                     {/* Header: User & Amount */}
@@ -223,7 +232,6 @@ function AdminDashboard() {
                       <p style={{ margin: '0 0 5px 0', fontSize: '13px', color: '#495057', display: 'flex', alignItems: 'center', gap: '5px' }}>
                         <Phone size={14} /> {req.user?.phone}
                       </p>
-                      {/* 👇 wordBreak prevents long UTRs from breaking the screen width 👇 */}
                       <p style={{ margin: 0, fontSize: '13px', color: '#dc3545', fontWeight: 'bold', wordBreak: 'break-all' }}>
                         UTR: {req.utrNumber || 'N/A'}
                       </p>
@@ -253,7 +261,6 @@ function AdminDashboard() {
                 <Activity size={20} color="#007bff" /> Network Volume
               </h3>
               
-              {/* 👇 Flex-wrap ensures buttons drop to next line instead of causing side-scroll 👇 */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                 <button style={filterBtnStyle('all')} onClick={() => setTimeFilter('all')}>ALL</button>
                 <button style={filterBtnStyle('6h')} onClick={() => setTimeFilter('6h')}>6H</button>
@@ -269,7 +276,6 @@ function AdminDashboard() {
                 <div style={{ height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#6c757d' }}><p>No network transactions yet.</p></div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
-                  {/* 👇 Upgraded to a sleek AreaChart with a Gradient 👇 */}
                   <AreaChart data={graphData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
@@ -349,10 +355,32 @@ function AdminDashboard() {
             </div>
           )}
           <form onSubmit={handleAddUser} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-            <div><label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#495057', fontSize: '14px' }}>Full Name</label><input type="text" value={addUserName} onChange={(e) => setAddUserName(e.target.value)} required style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ced4da', boxSizing: 'border-box' }} /></div>
-            <div><label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#495057', fontSize: '14px' }}>Phone Number</label><input type="tel" value={addUserPhone} onChange={(e) => setAddUserPhone(e.target.value)} required style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ced4da', boxSizing: 'border-box' }} /></div>
-            <div><label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#495057', fontSize: '14px' }}>Email Address (Optional)</label><input type="email" value={addUserEmail} onChange={(e) => setAddUserEmail(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ced4da', boxSizing: 'border-box' }} /></div>
-            <div><label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#495057', fontSize: '14px' }}>Initial Password</label><input type="password" value={addUserPassword} onChange={(e) => setAddUserPassword(e.target.value)} required minLength="6" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ced4da', boxSizing: 'border-box' }} /></div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#495057', fontSize: '14px' }}>Full Name</label>
+              <input type="text" value={addUserName} onChange={(e) => setAddUserName(e.target.value)} required style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ced4da', boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#495057', fontSize: '14px' }}>Phone Number</label>
+              {/* 👇 10-DIGIT LOCK APPLIED HERE 👇 */}
+              <input 
+                type="tel" 
+                value={addUserPhone} 
+                onChange={(e) => {
+                  const onlyNums = e.target.value.replace(/[^0-9]/g, '');
+                  if (onlyNums.length <= 10) setAddUserPhone(onlyNums);
+                }} 
+                required 
+                style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ced4da', boxSizing: 'border-box' }} 
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#495057', fontSize: '14px' }}>Email Address (Optional)</label>
+              <input type="email" value={addUserEmail} onChange={(e) => setAddUserEmail(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ced4da', boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#495057', fontSize: '14px' }}>Initial Password</label>
+              <input type="password" value={addUserPassword} onChange={(e) => setAddUserPassword(e.target.value)} required minLength="6" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ced4da', boxSizing: 'border-box' }} />
+            </div>
             <button type="submit" style={{ width: '100%', padding: '15px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', marginTop: '10px' }}>Create User Instantly</button>
           </form>
         </div>
