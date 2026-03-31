@@ -70,7 +70,8 @@ router.post('/resolve-request/:id', auth, async (req, res) => {
 router.get('/dashboard-stats', auth, async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
-    const pendingCount = await RechargeRequest.countDocuments({ status: 'Pending' });
+    // 👇 UPDATED: Added agentId: 'Admin' to fix the dashboard counter 👇
+    const pendingCount = await RechargeRequest.countDocuments({ status: 'Pending', agentId: 'Admin' });
     
     const adminGraphData = [
       { day: 'Mon', coinsDistributed: 1000, requests: 5 },
